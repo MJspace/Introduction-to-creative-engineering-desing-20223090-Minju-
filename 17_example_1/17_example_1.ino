@@ -2,6 +2,7 @@
 
 // Arduino pin assignment
 #define PIN_LED 9
+#define PIN_M
 #define PIN_POTENTIOMETER 0 // Potentiometer at Pin A3
 // Add IR Sensor Definition Here !!!
 #define PIN_SERVO 10
@@ -26,6 +27,7 @@ void setup()
 {
   myservo.attach(PIN_SERVO); 
   myservo.writeMicroseconds(_DUTY_NEU);
+  pinMode(9, OUTPUT);
   
   Serial.begin(2000000);
 }
@@ -67,14 +69,14 @@ void loop()
 
   
   if (dist_ema <= _DIST_MIN) {
-    digitalWrite(PIN_LED,1);
+    //digitalWrite(PIN_LED,1);
     myservo.writeMicroseconds(_DUTY_MIN);
        // LED OFF
   } else if (dist_ema >= _DIST_MAX) {
-    digitalWrite(PIN_LED,1);
+    //digitalWrite(PIN_LED,1);
     myservo.writeMicroseconds(_DUTY_MAX);     // LED OFF
   } else {    // In desired Range
-    digitalWrite(PIN_LED,0);
+    //digitalWrite(PIN_LED,0);
     duty = 1846/150*(dist-100)+553;
     myservo.writeMicroseconds(duty);
 
