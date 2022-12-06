@@ -1,5 +1,5 @@
 #include <Servo.h>
-//n값을 100으로 바꿔보기
+
 // Arduino pin assignment
 #define PIN_LED 9
 #define PIN_SERVO 10
@@ -12,22 +12,24 @@
 #define _INTERVAL_SERIAL  80 // serial interval (unit: ms)
 
 // EMA filter configuration for the IR distance sensor
-#define _EMA_ALPHA 0.5      // EMA weight of new sample (range: 0 to 1)
+#define _EMA_ALPHA_ 0.7 
+#define _EMA_ALPHA 0.8      // EMA weight of new sample (range: 0 to 1)
+                          // Setting EMA to 1 effectively disables EMA filter.
 
 // Servo adjustment
-#define _DUTY_NEU 1440  // Servo angle: 0 degree
-#define _DUTY_MAX 2500  // Servo angle: D degree
-#define _DUTY_MIN 600   // Servo angle: E degree
-#define _SERVO_ANGLE_DIFF 20 // Replace with |D - E| degree
-#define _SERVO_SPEED 100 // servo speed limit (unit: degree/second)
+#define _DUTY_NEU 1770  // Servo angle: 0 degree
+#define _DUTY_MAX 2763  // Servo angle: D degree
+#define _DUTY_MIN 493   // Servo angle: E degree
+#define _SERVO_ANGLE_DIFF 90 // Replace with |D - E| degree
+#define _SERVO_SPEED 50 // servo speed limit (unit: degree/second)
 
 // PID parameters
-#define _KP 2.5 //2.5 // proportional gain
-#define _KD 100 // derivative gain
+#define _KP 3 // proportional gain
+#define _KD 350 // derivative gain
 //#define _KI 0 // integral gain
 
 // global variables
-float dist_filtered, dist_ema, dist_target; // unit: mm
+float dist_filtered, dist_ema, dist_target, duty_ema; // unit: mm
 
 Servo myservo;
 
@@ -85,7 +87,7 @@ void loop()
     event_dist = false;
     
     // Get a distance reading from the distance sensor
-    dist_filtered = volt_to_distance(ir_sensor_filtered(50, 0.5));
+    dist_filtered = volt_to_distance(ir_sensor_filtered(10, 0.5));
     dist_ema = _EMA_ALPHA * dist_ema + (1.0 - _EMA_ALPHA) * dist_filtered;
 
     // Update PID control variables
@@ -116,7 +118,8 @@ void loop()
     // update servo position
     if(duty_curr > _DUTY_MAX) duty_curr = _DUTY_MAX; // for servo arm protection
     if(duty_curr < _DUTY_MIN) duty_curr = _DUTY_MIN;
-    myservo.writeMicroseconds(duty_curr);
+    duty_ema = _EMA_ALPHA_ * duty_ema + (1.0 - _EMA_ALPHA_) * duty_curr;
+    myservo.writeMicroseconds(duty_ema);
   }
 
 ///////// DO NOT MODIFY SERIAL OUTPUT!! ///////// 
@@ -136,12 +139,9 @@ void loop()
   }
 }
 /////////////////////////////////////////////////
-
 float volt_to_distance(int a_value)
 {
-//   return (6762.0 / (a_value - 9) - 4.0) * 10.0; // Replace this with the equation obtained from nonlinear regression analysis
-   return 1722-9.81*a_value+0.0193*a_value*a_value-1.28E-05*a_value*a_value*a_value;
-//  return 718-3.42*a_value+5.95E-03*a_value*a_value-3.69E-06*a_value*a_value*a_value;
+  return 1140 -5.92*(a_value) + 0.011*a_value*a_value - (((((((((7.07/10)/10)/10)/10)/10)/10)*a_value)*a_value)*a_value); // Replace this with the equation obtained from nonlinear regression analysis
 }
 
 unsigned int ir_sensor_filtered(unsigned int n, float position)
